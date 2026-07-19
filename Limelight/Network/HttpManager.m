@@ -417,17 +417,6 @@ static const NSString* HTTPS_PORT = @"47984";
     }
 }
 
-- (void)appendPolarisDesktopDisplayParam:(NSMutableString *)extraParams
-                                  config:(StreamConfiguration *)config {
-    NSString *appName = [config.appName stringByTrimmingCharactersInSet:
-                         [NSCharacterSet whitespaceAndNewlineCharacterSet]];
-    if ([appName caseInsensitiveCompare:@"Desktop"] == NSOrderedSame) {
-        // Keep game entries on Polaris' private compositor, but make the
-        // standard Desktop tile mirror the already-running host workspace.
-        [extraParams appendString:@"&mirrorDesktop=1"];
-    }
-}
-
 - (NSURLRequest*) newLaunchRequest:(StreamConfiguration*)config {
     BOOL sops = config.optimizeGameSettings;
 
@@ -488,7 +477,6 @@ static const NSString* HTTPS_PORT = @"47984";
     }
 
     [self appendSunshineFoundationParams:extraParams config:config];
-    [self appendPolarisDesktopDisplayParam:extraParams config:config];
 
     // Ensure even dimensions (some encoders/decoders require this)
     modeWidth &= ~1;
@@ -573,7 +561,6 @@ static const NSString* HTTPS_PORT = @"47984";
     }
 
     [self appendSunshineFoundationParams:extraParams config:config];
-    [self appendPolarisDesktopDisplayParam:extraParams config:config];
 
     modeWidth &= ~1;
     modeHeight &= ~1;
