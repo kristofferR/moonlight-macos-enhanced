@@ -81,8 +81,10 @@
                 return;
             }
 
-            NSString *timeoutMessage = @"主机仍在启动或恢复串流，会比视频阶段慢很多。\n可继续等待，或手动重连 / 返回后重新进入。";
-            [strongSelf showErrorOverlayWithTitle:@"主机启动较慢"
+            NSString *timeoutMessage = MLString(
+                @"The host is still starting or resuming the stream. This can take much longer than video startup.\nYou can keep waiting, reconnect manually, or return and try again.",
+                @"Slow host startup message");
+            [strongSelf showErrorOverlayWithTitle:MLString(@"Host Startup Is Slow", nil)
                                           message:timeoutMessage
                                           canWait:YES];
             return;
@@ -92,8 +94,10 @@
         if (strongSelf.reconnectInProgress) {
             [strongSelf hideReconnectOverlay];
             strongSelf.reconnectInProgress = NO;
-            [strongSelf showErrorOverlayWithTitle:@"重连超时"
-                                          message:@"重连过程耗时过长，连接可能已断开。\n请检查网络环境或调整设置。"
+            [strongSelf showErrorOverlayWithTitle:MLString(@"Reconnect Timed Out", nil)
+                                          message:MLString(
+                                              @"Reconnecting took too long and the connection may have been lost.\nCheck the network or adjust the stream settings.",
+                                              @"Reconnect timeout message")
                                           canWait:NO];
             return;
         }
@@ -103,18 +107,22 @@
             strongSelf.shouldAttemptReconnect &&
             [strongSelf isAutomaticRecoveryModeEnabled]) {
             strongSelf.didAutoReconnectAfterTimeout = YES;
-            [strongSelf showReconnectOverlayWithMessage:@"网络无响应，正在尝试重连…"]; 
+            [strongSelf showReconnectOverlayWithMessage:MLString(
+                @"The network is not responding. Trying to reconnect…",
+                @"Automatic reconnect message")];
             [strongSelf attemptReconnectWithReason:@"connect-timeout-auto"]; 
             return;
         }
 
         NSString *timeoutMessage = [strongSelf isAutomaticRecoveryModeEnabled]
-            ? @"已持续 15 秒未接收到视频数据。\n请检查网络连接或尝试以下操作。"
+            ? MLString(
+                @"No video data has arrived for 15 seconds.\nCheck the network connection or try one of the options below.",
+                @"Automatic timeout message")
             : [NSString stringWithFormat:@"%@\n%@\n%@",
                 MLString(@"No new video frame has arrived for 15 seconds.", @"Manual timeout lead message"),
                 MLString(@"Manual mode won't change your resolution, frame rate, codec, or chroma automatically.", @"Manual timeout manual mode explanation"),
                 MLString(@"You can keep waiting, reconnect manually, or apply a recommended profile.", @"Manual timeout actions")];
-        [strongSelf showErrorOverlayWithTitle:@"连接不稳定或无画面"
+        [strongSelf showErrorOverlayWithTitle:MLString(@"Connection Is Unstable or No Video", nil)
                                       message:timeoutMessage
                                       canWait:YES];
     });
@@ -188,7 +196,9 @@
 
         // --- Core Actions ---
         
-        NSButton *reconnectBtn = [NSButton buttonWithTitle:@"尝试重连" target:self action:@selector(handleTimeoutReconnect:)];
+        NSButton *reconnectBtn = [NSButton buttonWithTitle:MLString(@"Retry Connection", nil)
+                                                    target:self
+                                                    action:@selector(handleTimeoutReconnect:)];
         reconnectBtn.bezelStyle = NSBezelStyleRounded; // Standard pill style
         reconnectBtn.controlSize = NSControlSizeLarge; 
         reconnectBtn.font = [NSFont systemFontOfSize:14 weight:NSFontWeightSemibold];
@@ -196,11 +206,15 @@
         // To make it look "filled" on HUD, rely on bezelStyle or use layer
         // Standard macOS dark HUD usually handles rounded buttons well.
 
-        NSButton *waitBtn = [NSButton buttonWithTitle:@"继续等待" target:self action:@selector(handleTimeoutWait:)];
+        NSButton *waitBtn = [NSButton buttonWithTitle:MLString(@"Continue Waiting", nil)
+                                               target:self
+                                               action:@selector(handleTimeoutWait:)];
         waitBtn.bezelStyle = NSBezelStyleRounded;
         waitBtn.controlSize = NSControlSizeLarge;
 
-        NSButton *exitBtn = [NSButton buttonWithTitle:@"退出串流" target:self action:@selector(handleTimeoutExitStream:)];
+        NSButton *exitBtn = [NSButton buttonWithTitle:MLString(@"Exit Stream", nil)
+                                               target:self
+                                               action:@selector(handleTimeoutExitStream:)];
         exitBtn.bezelStyle = NSBezelStyleRounded;
         exitBtn.controlSize = NSControlSizeLarge;
 
@@ -238,11 +252,11 @@
             return btn;
         };
 
-        NSButton *resBtn = createSettingsBtn(@"分辨率", @"display", @selector(handleTimeoutResolution:));
-        NSButton *bitrateBtn = createSettingsBtn(@"码率", @"speedometer", @selector(handleTimeoutBitrate:));
-        NSButton *displayModeBtn = createSettingsBtn(@"显示模式", @"macwindow", @selector(handleTimeoutDisplayMode:));
-        NSButton *connBtn = createSettingsBtn(@"连接方式", @"network", @selector(handleTimeoutConnection:));
-        NSButton *recommendedBtn = createSettingsBtn(@"推荐档位", @"sparkles", @selector(handleTimeoutRecommendedProfile:));
+        NSButton *resBtn = createSettingsBtn(MLString(@"Resolution", nil), @"display", @selector(handleTimeoutResolution:));
+        NSButton *bitrateBtn = createSettingsBtn(MLString(@"Bitrate", nil), @"speedometer", @selector(handleTimeoutBitrate:));
+        NSButton *displayModeBtn = createSettingsBtn(MLString(@"Display Mode", nil), @"macwindow", @selector(handleTimeoutDisplayMode:));
+        NSButton *connBtn = createSettingsBtn(MLString(@"Connection Method", nil), @"network", @selector(handleTimeoutConnection:));
+        NSButton *recommendedBtn = createSettingsBtn(MLString(@"Recommended Profile", nil), @"sparkles", @selector(handleTimeoutRecommendedProfile:));
 
         // --- Log Tools - 改进样式，使用图标按钮 ---
         
@@ -277,8 +291,8 @@
             return btn;
         };
         
-        NSButton *viewLogBtn = createLogBtn(@"查看日志", @"doc.text.magnifyingglass", @selector(handleTimeoutViewLogs:));
-        NSButton *copyLogBtn = createLogBtn(@"复制日志", @"doc.on.doc", @selector(handleTimeoutCopyLogs:));
+        NSButton *viewLogBtn = createLogBtn(MLString(@"View Log", nil), @"doc.text.magnifyingglass", @selector(handleTimeoutViewLogs:));
+        NSButton *copyLogBtn = createLogBtn(MLString(@"Copy Logs", nil), @"doc.on.doc", @selector(handleTimeoutCopyLogs:));
 
         // --- Hierarchy ---
 
@@ -321,8 +335,8 @@
     }
     
     // Update content
-    self.timeoutTitleLabel.stringValue = title ?: @"连接异常";
-    self.timeoutLabel.stringValue = message ?: @"未知错误";
+    self.timeoutTitleLabel.stringValue = title ?: MLString(@"Connection Error", nil);
+    self.timeoutLabel.stringValue = message ?: MLString(@"Unknown Error", nil);
     self.timeoutWaitButton.hidden = !canWait;
     BOOL showRecommendedProfile = self.currentStreamRiskAssessment != nil &&
                                   self.currentStreamRiskAssessment.manualExpertMode &&
